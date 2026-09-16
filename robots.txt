@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wedding-content-creator.vercel.app/sitemap.xml
