@@ -1,0 +1,13 @@
+{
+  "name": "Wedding Content Guide",
+  "short_name": "WC Guide",
+  "description": "What a wedding content creator is, how to hire one, and how to become one.",
+  "icons": [
+    { "src": "/assets/favicon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/favicon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "theme_color": "#41606f",
+  "background_color": "#fafcfd",
+  "display": "standalone"
+}
