@@ -1,4 +1,9 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true },
+    { "source": "/wedding-content-creator-contract-template.html", "destination": "/wedding-content-creator-contract-template", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/wedding-content-creator-contract-template", "destination": "/wedding-content-creator-contract-template.html" }
+  ]
 }
