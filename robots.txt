@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://wedding-content-creator.vercel.app/sitemap.xml
+Sitemap: https://www.weddingcontentguide.com/sitemap.xml
