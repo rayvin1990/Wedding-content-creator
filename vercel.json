@@ -2,10 +2,12 @@
   "redirects": [
     { "source": "/index.html", "destination": "/", "permanent": true },
     { "source": "/wedding-content-creator-contract-template.html", "destination": "/wedding-content-creator-contract-template", "permanent": true },
-    { "source": "/how-to-become-a-wedding-content-creator.html", "destination": "/how-to-become-a-wedding-content-creator", "permanent": true }
+    { "source": "/how-to-become-a-wedding-content-creator.html", "destination": "/how-to-become-a-wedding-content-creator", "permanent": true },
+    { "source": "/wedding-content-creator-vs-videographer.html", "destination": "/wedding-content-creator-vs-videographer", "permanent": true }
   ],
   "rewrites": [
     { "source": "/wedding-content-creator-contract-template", "destination": "/wedding-content-creator-contract-template.html" },
-    { "source": "/how-to-become-a-wedding-content-creator", "destination": "/how-to-become-a-wedding-content-creator.html" }
+    { "source": "/how-to-become-a-wedding-content-creator", "destination": "/how-to-become-a-wedding-content-creator.html" },
+    { "source": "/wedding-content-creator-vs-videographer", "destination": "/wedding-content-creator-vs-videographer.html" }
   ]
 }
