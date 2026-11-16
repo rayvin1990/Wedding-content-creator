@@ -1,4 +1,4 @@
-// TEMP DEBUG v2 — inspect what list() sees for various prefixes.
+// TEMP DEBUG v3 — can we fetch a private blob's URL server-side?
 import { list } from '@vercel/blob';
 
 export default async function handler(req, res) {
@@ -7,14 +7,18 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'forbidden' });
   }
   const out = {};
-  for (const p of ['', 'leads', 'leads/', 'leads/m']) {
+  const { blobs } = await list({ prefix: 'leads/', limit: 3 });
+  out.found = blobs.map((b) => b.pathname);
+  if (blobs.length) {
+    const b = blobs[0];
+    out.url = b.url;
     try {
-      const r = await list({ prefix: p, limit: 20 });
-      out[p || '(none)'] = r.blobs.map((b) => b.pathname);
+      const r = await fetch(b.url);
+      out.fetchStatus = r.status;
+      out.fetchBody = (await r.text()).slice(0, 200);
     } catch (e) {
-      out[p || '(none)'] = 'ERR: ' + String(e).slice(0, 200);
+      out.fetchError = String(e).slice(0, 200);
     }
   }
-  out.storeId = process.env.BLOB_STORE_ID || null;
   return res.status(200).json(out);
 }
