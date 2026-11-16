@@ -291,15 +291,16 @@ footer{border-top:1px solid var(--line);padding:46px 0 52px;margin-top:64px}
       <h2>Send me the template</h2>
       <p class="sub">One editable Google Docs-ready agreement with all 12 clauses and blanks. Free, no fluff. We also send occasional pricing and workflow notes for new creators.</p>
       <div class="frow">
+        <input type="text" id="company" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
         <input type="email" id="email" name="email" placeholder="you@email.com" aria-label="Email address" required>
         <button class="btn btn-solid" type="submit" id="leadBtn">Get the template</button>
       </div>
-      <p class="form-note">The download starts immediately. No spam, unsubscribe anytime.</p>
+      <p class="form-note">The download starts immediately and a copy of the link goes to your inbox. No spam, unsubscribe anytime.</p>
       <p class="form-note" style="margin-top:10px">Prefer to skip email for now? <a href="assets/wedding-content-creator-contract-template.docx" download>Download the .docx directly</a> (Google Docs / Word).</p>
     </form>
     <div class="form-ok" id="formOk">
       <h2>You&rsquo;re in &mdash; download starting</h2>
-      <p class="sub" style="margin-bottom:0">Your 12-clause template should be saving now; check your downloads folder. We&rsquo;ll occasionally send pricing and workflow notes for new creators &mdash; unsubscribe anytime.</p>
+      <p class="sub" style="margin-bottom:0">Your 12-clause template should be saving now. A copy of the link is on its way to your inbox, along with occasional pricing and workflow notes &mdash; unsubscribe anytime.</p>
     </div>
   </div>
 
@@ -343,15 +344,33 @@ footer{border-top:1px solid var(--line);padding:46px 0 52px;margin-top:64px}
 </footer>
 
 <script>
-const form=document.getElementById('leadForm'),ok=document.getElementById('formOk'),email=document.getElementById('email'),leadBtn=document.getElementById('leadBtn');
+const form=document.getElementById('leadForm'),ok=document.getElementById('formOk'),email=document.getElementById('email'),leadBtn=document.getElementById('leadBtn'),honey=document.getElementById('company');
 form.addEventListener('submit',async e=>{
   e.preventDefault();
+  if(honey.value){return;} /* honeypot: bots fill hidden fields, humans never do */
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)){email.focus();email.style.borderColor='#b05b4e';return;}
   leadBtn.disabled=true;leadBtn.textContent='Sending\u2026';
   let sent=false;
   try{
-    const r=await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.value.trim(),page:'contract-template'})});
-    sent=r.ok;
+    const d=await fetch('/api/subscribe-dest',{cache:'no-store'});
+    const dest=(await d.json()).dest;
+    if(dest){
+      const r=await fetch('https://formsubmit.co/ajax/'+encodeURIComponent(dest),{
+        method:'POST',
+        headers:{'Content-Type':'application/json',Accept:'application/json'},
+        body:JSON.stringify({
+          _subject:'New lead: WCFG contract template',
+          _template:'table',
+          _replyto:email.value.trim(),
+          _autoresponse:'Thanks for grabbing the wedding content creator contract template. Your download should have started automatically; if you need it again: https://www.weddingcontentguide.com/assets/wedding-content-creator-contract-template.docx \u2014 The Wedding Content Guide',
+          email:email.value.trim(),
+          page:'contract-template',
+          source:'weddingcontentguide.com'
+        })
+      });
+      const data=await r.json().catch(()=>({}));
+      sent=r.ok&&(data.success===true||/activation/i.test(String(data.message||'')));
+    }
   }catch(err){sent=false;}
   if(!sent){leadBtn.disabled=false;leadBtn.textContent='Get the template';alert('That did not go through \u2014 use the direct .docx link below, or try again in a moment.');return;}
   if(typeof gtag==='function'){gtag('event','generate_lead',{form:'contract-template'});}
