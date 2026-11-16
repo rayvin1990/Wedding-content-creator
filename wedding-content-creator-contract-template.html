@@ -292,14 +292,14 @@ footer{border-top:1px solid var(--line);padding:46px 0 52px;margin-top:64px}
       <p class="sub">One editable Google Docs-ready agreement with all 12 clauses and blanks. Free, no fluff. We also send occasional pricing and workflow notes for new creators.</p>
       <div class="frow">
         <input type="email" id="email" name="email" placeholder="you@email.com" aria-label="Email address" required>
-        <button class="btn btn-solid" type="submit">Get the template</button>
+        <button class="btn btn-solid" type="submit" id="leadBtn">Get the template</button>
       </div>
-      <p class="form-note">Form placeholder: connect MailerLite or Kit before launch. Unsubscribe anytime.</p>
+      <p class="form-note">The download starts immediately. No spam, unsubscribe anytime.</p>
       <p class="form-note" style="margin-top:10px">Prefer to skip email for now? <a href="assets/wedding-content-creator-contract-template.docx" download>Download the .docx directly</a> (Google Docs / Word).</p>
     </form>
     <div class="form-ok" id="formOk">
-      <h2>Check your inbox</h2>
-      <p class="sub" style="margin-bottom:0">The template link is on its way. If it does not arrive in a few minutes, check promotions or spam.</p>
+      <h2>You&rsquo;re in &mdash; download starting</h2>
+      <p class="sub" style="margin-bottom:0">Your 12-clause template should be saving now; check your downloads folder. We&rsquo;ll occasionally send pricing and workflow notes for new creators &mdash; unsubscribe anytime.</p>
     </div>
   </div>
 
@@ -343,12 +343,23 @@ footer{border-top:1px solid var(--line);padding:46px 0 52px;margin-top:64px}
 </footer>
 
 <script>
-const form=document.getElementById('leadForm'),ok=document.getElementById('formOk'),email=document.getElementById('email');
-form.addEventListener('submit',e=>{
+const form=document.getElementById('leadForm'),ok=document.getElementById('formOk'),email=document.getElementById('email'),leadBtn=document.getElementById('leadBtn');
+form.addEventListener('submit',async e=>{
   e.preventDefault();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)){email.focus();email.style.borderColor='#b05b4e';return;}
-  /* TODO at launch: POST to MailerLite/Kit API or form action */
+  leadBtn.disabled=true;leadBtn.textContent='Sending\u2026';
+  let sent=false;
+  try{
+    const r=await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.value.trim(),page:'contract-template'})});
+    sent=r.ok;
+  }catch(err){sent=false;}
+  if(!sent){leadBtn.disabled=false;leadBtn.textContent='Get the template';alert('That did not go through \u2014 use the direct .docx link below, or try again in a moment.');return;}
+  if(typeof gtag==='function'){gtag('event','generate_lead',{form:'contract-template'});}
   form.style.display='none';ok.classList.add('show');
+  const dl=document.createElement('a');
+  dl.href='assets/wedding-content-creator-contract-template.docx';
+  dl.setAttribute('download','');
+  document.body.appendChild(dl);dl.click();dl.remove();
 });
 const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}}),{threshold:.12});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
