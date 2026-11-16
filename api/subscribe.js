@@ -23,7 +23,12 @@ export default async function handler(req, res) {
   try {
     const r = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(dest), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        // FormSubmit rejects requests without a Referer (anti-script check)
+        Referer: 'https://www.weddingcontentguide.com/wedding-content-creator-contract-template',
+      },
       body: JSON.stringify({
         _subject: 'New lead: WCFG contract template',
         _template: 'table',
@@ -34,6 +39,12 @@ export default async function handler(req, res) {
       }),
     });
     if (!r.ok) {
+      return res.status(502).json({ ok: false });
+    }
+    // FormSubmit answers 200 even for "needs activation" — treat that as
+    // success for the visitor; the owner only has to click once, ever.
+    const data = await r.json().catch(() => ({}));
+    if (data.success === false && !/activation/i.test(String(data.message || ''))) {
       return res.status(502).json({ ok: false });
     }
     return res.status(200).json({ ok: true });
