@@ -1,9 +1,7 @@
 // POST /api/subscribe — validates the email and stores it as a lead in the
-// project's private Vercel Blob store (leads.json). No third-party form
-// service, no activation emails, no PII in the page source.
-import { put, list } from '@vercel/blob';
-
-const PATH = 'leads.json';
+// project's private Vercel Blob store (one small JSON per submission, so
+// there is no read-modify-write race; the read endpoint merges them).
+import { put } from '@vercel/blob';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -31,25 +29,15 @@ export default async function handler(req, res) {
     page: String(body.page || 'contract-template').slice(0, 100),
     source: String(body.source || 'weddingcontentguide.com').slice(0, 100),
   };
+  const id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 
   try {
-    let leads = [];
-    const { blobs } = await list({ prefix: PATH });
-    if (blobs.length) {
-      const r = await fetch(blobs[0].url);
-      if (r.ok) {
-        const parsed = await r.json().catch(() => null);
-        if (Array.isArray(parsed)) leads = parsed;
-      }
-    }
-    leads.push(entry);
-    await put(PATH, JSON.stringify(leads, null, 2), {
+    await put(`leads/${id}.json`, JSON.stringify(entry), {
       access: 'private',
       contentType: 'application/json',
       addRandomSuffix: false,
-      allowOverwrite: true,
     });
-    return res.status(200).json({ ok: true, total: leads.length });
+    return res.status(200).json({ ok: true, id });
   } catch (e) {
     return res.status(500).json({ ok: false });
   }

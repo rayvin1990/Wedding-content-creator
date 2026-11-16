@@ -1,9 +1,8 @@
 // GET /api/leads?key=... — read-only view of stored leads for the site owner
 // and the weekly analytics report. Gated by LEADS_READ_KEY (Vercel secret env
-// var), so the lead list is never publicly reachable.
+// var), so the lead list is never publicly reachable. Merges the per-submission
+// blobs under leads/ and sorts them chronologically.
 import { list } from '@vercel/blob';
-
-const PATH = 'leads.json';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -15,13 +14,21 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'forbidden' });
   }
   try {
-    const { blobs } = await list({ prefix: PATH });
-    if (!blobs.length) {
-      return res.status(200).json({ leads: [], total: 0 });
+    const { blobs } = await list({ prefix: 'leads/' });
+    const leads = [];
+    for (const b of blobs) {
+      try {
+        const r = await fetch(b.url);
+        if (r.ok) {
+          const j = await r.json();
+          if (j && j.email) leads.push(j);
+        }
+      } catch (e) {
+        /* skip unreadable entry */
+      }
     }
-    const r = await fetch(blobs[0].url);
-    const leads = await r.json().catch(() => []);
-    return res.status(200).json({ leads, total: Array.isArray(leads) ? leads.length : 0 });
+    leads.sort((a, b) => String(a.at).localeCompare(String(b.at)));
+    return res.status(200).json({ leads, total: leads.length });
   } catch (e) {
     return res.status(500).json({ error: 'read_failed' });
   }
