@@ -1,4 +1,4 @@
-// TEMP DEBUG v3 — can we fetch a private blob's URL server-side?
+// TEMP DEBUG v4 — which auth method reads a private blob's content?
 import { list } from '@vercel/blob';
 
 export default async function handler(req, res) {
@@ -7,17 +7,24 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'forbidden' });
   }
   const out = {};
-  const { blobs } = await list({ prefix: 'leads/', limit: 3 });
-  out.found = blobs.map((b) => b.pathname);
-  if (blobs.length) {
-    const b = blobs[0];
-    out.url = b.url;
+  const { blobs } = await list({ prefix: 'leads/', limit: 1 });
+  if (!blobs.length) return res.status(200).json({ error: 'no blobs' });
+  const url = blobs[0].url;
+  const token = process.env.BLOB_READ_WRITE_TOKEN || '';
+  out.hasToken = Boolean(token);
+
+  const tries = {
+    bearer: { Authorization: `Bearer ${token}` },
+    queryToken: {},
+    headerToken: { 'x-vercel-blob-token': token },
+  };
+  for (const [name, headers] of Object.entries(tries)) {
+    const u = name === 'queryToken' ? `${url}?token=${encodeURIComponent(token)}` : url;
     try {
-      const r = await fetch(b.url);
-      out.fetchStatus = r.status;
-      out.fetchBody = (await r.text()).slice(0, 200);
+      const r = await fetch(u, { headers });
+      out[name] = { status: r.status, body: (await r.text()).slice(0, 120) };
     } catch (e) {
-      out.fetchError = String(e).slice(0, 200);
+      out[name] = { error: String(e).slice(0, 120) };
     }
   }
   return res.status(200).json(out);
