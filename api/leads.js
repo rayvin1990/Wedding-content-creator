@@ -15,10 +15,14 @@ export default async function handler(req, res) {
   }
   try {
     const { blobs } = await list({ prefix: 'leads/' });
+    // Private blobs are only readable with the store's read-write token.
+    const headers = process.env.BLOB_READ_WRITE_TOKEN
+      ? { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+      : {};
     const leads = [];
     for (const b of blobs) {
       try {
-        const r = await fetch(b.url);
+        const r = await fetch(b.url, { headers });
         if (r.ok) {
           const j = await r.json();
           if (j && j.email) leads.push(j);
